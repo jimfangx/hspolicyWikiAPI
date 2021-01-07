@@ -1,0 +1,8 @@
+args on seperate lines: 
+https://hspolicy.debatecoaches.org/Chaminade/Ahuja-Hormozdiari%20Neg
+
+args on same lines, arg identifyer before arg:
+https://hspolicy.debatecoaches.org/Archbishop%20Mitty/Aggarwal-Patwa%20Neg
+
+arg on same lines, greehhill2 arg identifyer behind arg
+https://hspolicy.debatecoaches.org/Archbishop%20Mitty/Aggarwal-Patwa%20Aff
