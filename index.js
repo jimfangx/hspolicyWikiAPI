@@ -114,95 +114,47 @@ app.get('/roundreports', (req, resApp) => {
                 console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[0].trim())
                 console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[1].trim())
                 var argList = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('div').html().toLowerCase().replace(/<\/p>/g, "").replace(/<\\p>/g, "").replace(/<p>/g, "\n").replace(/<\/br>/g, "\n").replace(/<\\br>/g, "\n").replace(/<br>/g, '\n').trim().split('\n') // if 1ac has other text behind it in the elemnt - then its 1 thing, keep it. otherwise join all other elements until the next detection of a speech marker
-                console.log(argList)
-                // for (j = 0; j < argList.length-1; j++) { // check if arguments directly follow speech marker without \n
-                //     if (argList[j].includes('1ac') && argList[j].length > 4) { //1ac with actual argument content afterwards
-                //         if (argList[j + 1].includes('1nc') || argList[j + 1].includes('2ac') || argList[j + 1].includes('2nc') || argList[j + 1].includes('1nr') || argList[j + 1].includes('1ar') || argList[j + 1].includes('2nr') || argList[j + 1].includes('2ar')) { // usually in those situations, the next line is just a brand new speech. doing this prevents situations such as: 1NC courts cp \n states cp \n ptx da (aka 1 arg on the same line as the speech marker)
-                //             console.log(argList[j].replace('1ac', ""))
-                //         } else {
-                //             argOnDifferentLines = true
-                //             break;
-                //         }
-                //     }
+                // console.log(argList)
+
+                if (argList[0].includes('1ac') && argList[0].length <= 4) { // its args on every new line (https://hspolicy.debatecoaches.org/Chaminade/Ahuja-Hormozdiari%20Neg)
+                    var editStr = argList
+                    var tempArr = []
+                    var segment = "1ac"
+                    for (j = 1; j < editStr.length; j++) {
+
+                        if (editStr[j].trim() == '1nc' || editStr[j].trim() == '2ac' || editStr[j].trim() == '2nc' || editStr[j].trim() == '1nr' || editStr[j].trim() == '1ar' || editStr[j].trim() == '2nr' || editStr[j].trim() == '2ar') {
+                            // console.log(tempArr)
+                            roundData[segment] = tempArr // close last segment
+                            segment = editStr[j].trim()
+                            tempArr = []
+                        } else {
+                            tempArr.push(editStr[j].trim())
+                        }
 
 
-                // }
+                    }
+                    roundData[segment] = tempArr
+                } else if (argList[0].includes('1ac') && argList[0].length > 4) { // everything on 1 line seperated by spaces
+                    var editStr = argList
+                    var tempArr = []
+                    var segment = "1ac"
+                    for (j = 0; j < editStr.length; j++) {
+                        if (editStr[j].includes('1ac')) {
+                            tempArr.push(editStr[j].replace('1ac', ""))
+                            roundData['1ac'] = tempArr
+                        }
+                        else {
+                            segment = editStr[j].substring(0,3)
+                            editStr[j] = editStr[j].replace(segment, "")
 
-                if (argList[0].includes('1ac') && argList[0].length > 4) { // argument in one line with the speech marker
-                    if ((argList[1].includes('1nc') || argList[1].includes('2ac') || argList[1].includes('2nc') || argList[1].includes('1nr') || argList[1].includes('1ar') || argList[j + 1].includes('2nr') || argList[1].includes('2ar'))) {
-                        if (argList[1].length > 4) {
-                            for (k = 0; k < argList.length; k++) {
-                                argList[k] = argList[k].replace('1ac', "").replace('1nc', "").replace('2ac', "").replace('2nc', "").replace('1nr', "").replace('1ar', "").replace('2nr', "").replace('2ar', "").trim()
-                                if (argList[k].includes('cp') || argList[k].includes('da') || argList[k].includes(' k ') || argList[k].includes(' t ')) { //ex: t enact cp nga cp advantage cp executive order cp concon cp amendment da 2020 da court packing ct dpt bad'
-                                    if (argList[k].charAt(0) == '-' || argList[k].charAt(0) == '*') { // if there are markers seperating each arg
-                                        if (argList[k].charAt(0) == '-') argList[k] = argList[k].split('-')
-                                        if (argList[k].charAt(0) == '*') argList[k] = argList[k].split('*')
-
-
-                                    } else { // seperated by spaces
-                                        if (argList[k].split(' ')[0] == 't' || argList[k].split(' ')[0] == 'cp' || argList[k].split(' ')[0] == 'da' || argList[k].split(' ')[0] == 'k' || argList[k].split(' ')[0] == 'p') { //arg type comes first (ex:  T Enact CP NGA CP Advantage CP Executive Order CP ConCon CP Amendment DA 2020 DA Court Packing CT DPT Bad)
-                                            var splitUpArr = argList[k].split(' ')
-                                            var finalArry = []
-                                            var tempPushStr = ""
-                                            for (j = 0; j < splitUpArr.length; j++) {
-                                                if (splitUpArr[j] != 't' && splitUpArr[j] != 'cp' && splitUpArr[j] != 'da' && splitUpArr[j] != 'k' && splitUpArr[j] != 'p') { // if it is not an argument type, it has to be the name of an arg
-                                                    tempPushStr += " " + splitUpArr[j]
-                                                } else { //hit a arg type - save the string, push it into array, reset string
-
-                                                    finalArry.push(tempPushStr)
-                                                    tempPushStr = splitUpArr[j]
-
-                                                }
-                                            }
-                                            finalArry.push(tempPushStr)
-                                            argList[k] = finalArry
-                                        }
-                                        else if (argList[k].split(' ')[0].includes('-')) { //exception for  T-CJR T-Forensic Science T-Civil Courts CP Abolish the Senate CP Security K
-                                            var splitUpArr = argList[k].split(' ')
-                                            var finalArry = []
-                                            var tempPushStr = ""
-                                            for (j = 0; j < splitUpArr.length; j++) {
-                                                if (splitUpArr[j].includes('-')) { // if it has a "-", meaning its something like T-CJR
-                                                    finalArry.push(splitUpArr[j])
-                                                } else if (splitUpArr[j] != 't' && splitUpArr[j] != 'cp' && splitUpArr[j] != 'da' && splitUpArr[j] != 'k' && splitUpArr[j] != 'p') { // if it is not an argument type, it has to be the name of an arg
-                                                    // if ()
-                                                    tempPushStr += " " + splitUpArr[j]
-                                                } else { //hit a arg type - save the string, push it into array, reset string
-
-                                                    finalArry.push(tempPushStr)
-                                                    tempPushStr = splitUpArr[j]
-
-                                                }
-
-                                            }
-                                            finalArry.push(tempPushStr)
-                                            argList[k] = finalArry
-                                        }
-                                        else if (argList[k].split(' ')[0] != 't' && argList[k].split(' ')[0] != 'cp' && argList[k].split(' ')[0] != 'da' && argList[k].split(' ')[0] != 'k' && argList[k].split(' ')[0] != 'p') { // arg type at the end (ex: Black Futurity K)
-                                            var splitUpArr = argList[k].split(' ')
-                                            var finalArry = []
-                                            var tempPushStr = ""
-                                            for (j = 0; j < splitUpArr.length; j++) {
-                                                if (splitUpArr[j] != 't' && splitUpArr[j] != 'cp' && splitUpArr[j] != 'da' && splitUpArr[j] != 'k' && splitUpArr[j] != 'p') { // if it is not an argument type, it has to be the name of an arg
-                                                    tempPushStr += " " + splitUpArr[j]
-                                                } else { //hit a arg type - save the string, push it into array, reset string
-
-                                                    finalArry.push(tempPushStr)
-                                                    tempPushStr = splitUpArr[j]
-
-                                                }
-                                            }
-                                            finalArry.push(tempPushStr)
-                                            argList[k] = finalArry
-                                        }
-                                    }
-                                }
-                            }
+                            
                         }
                     }
                 }
+                console.log(roundData)
 
-                // break;
+
+                break;
             }
 
         })
