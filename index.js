@@ -113,8 +113,8 @@ app.get('/roundreports', (req, resApp) => {
                 console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[1]).text())
                 console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[0].trim())
                 console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[1].trim())
-                var argList = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('div').html().toLowerCase().replace(/<\/p>/g, "").replace(/<\\p>/g, "").replace(/<p>/g, "\n").replace(/<\/br>/g, "\n").replace(/<\\br>/g, "\n").replace(/<br>/g, '\n').trim().split('\n') // if 1ac has other text behind it in the elemnt - then its 1 thing, keep it. otherwise join all other elements until the next detection of a speech marker
-                // console.log(argList)
+                var argList = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('div').html().toLowerCase().replace(/<\/p>/g, "").replace(/<\\p>/g, "").replace(/<p>/g, "\n").replace(/<\/br>/g, "\n").replace(/<\\br>/g, "\n").replace(/<br>/g, '\n').replace(/-/g, " ").trim().split('\n') // if 1ac has other text behind it in the elemnt - then its 1 thing, keep it. otherwise join all other elements until the next detection of a speech marker
+                console.log("ARG LIST: " + argList)
 
                 if (argList[0].includes('1ac') && argList[0].length <= 4) { // its args on every new line (https://hspolicy.debatecoaches.org/Chaminade/Ahuja-Hormozdiari%20Neg)
                     var editStr = argList
@@ -138,23 +138,69 @@ app.get('/roundreports', (req, resApp) => {
                     var editStr = argList
                     var tempArr = []
                     var segment = "1ac"
-                    for (j = 0; j < editStr.length; j++) {
-                        if (editStr[j].includes('1ac')) {
-                            tempArr.push(editStr[j].replace('1ac', ""))
-                            roundData['1ac'] = tempArr
-                        }
-                        else {
-                            segment = editStr[j].substring(0,3)
-                            editStr[j] = editStr[j].replace(segment, "")
+                    var tempStr = ""
+                    var lastStr = ""
+                    var lastArgType = ""
+                    var speech = ""
 
-                            
+                    tempArr.push(editStr[0].replace('1ac', ""))
+                    roundData['1ac'] = tempArr
+                    editStr.splice(0, 1)
+                    for (j = 0; j < argList.length; j++) {
+                        editStr = argList[j].split(' ')
+                        speech = editStr[0]
+                        editStr.splice(0, 1)
+                        tempArr = []
+                        while (editStr.length > 0) {
+                            // editStr[0] = editStr[0].
+                            // if (editStr[0].indexOf('-') < 2 && editStr[0].indexOf('-') > 0) { // situations such as t-cjr
+                            //     tempArr.push(editStr[0])
+                            //     editStr.splice(0, 1)
+                            // }
+                            if (editStr[0] === 't' || editStr[0] === 'p') {
+                                tempArr.push(tempStr)
+                                lastArgType = editStr[0]
+                                tempStr = editStr[0]
+                                editStr.splice(0, 1)
+                            }
+                            if (editStr[0] != 't' && editStr[0] != 'p' && editStr[0] != 'cp' && editStr[0] != 'da' && editStr[0] != 'k') {
+                                lastStr = editStr[0]
+                                tempStr += " " + editStr[0]
+                                editStr.splice(0, 1)
+                            }
+                            if (editStr[0] === 'cp' || editStr[0] === 'da' || editStr[0] === 'k' || editStr[0] === 'ct') {
+                                if (editStr[editStr.length - 1] === 'k' || editStr[editStr.length - 1] === 'cp' || editStr[editStr.length - 1] === 'da' || editStr[editStr.length - 1] === 'ct') {
+                                    if (lastArgType === "t" || lastArgType === "p") {
+                                        tempArr.push(tempStr.replace(lastStr, "").trim())
+                                        tempStr = lastStr + " " + editStr[0]
+                                    } else {
+                                        tempStr += " " + editStr[0]
+                                    }
+                                    editStr.splice(0, 1)
+                                    tempArr.push(tempStr.trim())
+                                    tempStr = ""
+                                    lastArgType = '' // reset and standby for t & p
+                                } else {
+
+                                    tempArr.push(tempStr.trim())
+                                    tempStr = editStr[0]
+                                    editStr.splice(0, 1)
+                                }
+
+
+                            } else if (editStr.length == 0 && tempArr[tempArr.length - 1] != tempStr) { // last element, editStr is empty
+                                tempArr.push(tempStr)
+                            }
                         }
+                        // tempArr.push(tempStr.trim())
+                        roundData[speech] = tempArr
+
                     }
                 }
-                console.log(roundData)
+                console.log("SORTED LIST: " + roundData['1nc'])
 
 
-                break;
+                // break;
             }
 
         })
