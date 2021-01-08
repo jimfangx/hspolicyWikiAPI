@@ -93,7 +93,7 @@ app.get('/roundreports', (req, resApp) => {
             var $ = cheerio.load(res.text)
             var roundData = null
             var argOnDifferentLines = false;
-
+            var returnArr = []
             for (i = 1; i < $('#tblReports').children('tbody').children('tr').length; i++) { // check if this needs to be <=
                 roundData = {
                     "tournament": "",
@@ -109,10 +109,10 @@ app.get('/roundreports', (req, resApp) => {
                     "2nr": [],
                     "2ar": []
                 }
-                console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[0]).text())
-                console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[1]).text())
-                console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[0].trim())
-                console.log($($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[1].trim())
+                roundData.tournament = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[0]).text()
+                roundData.round = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[1]).text()
+                roundData.oppoent = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[0].trim()
+                roundData.judge = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[1].trim()
                 var argList = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('div').html().toLowerCase().replace(/<\/p>/g, "").replace(/<\\p>/g, "").replace(/<p>/g, "\n").replace(/<\/br>/g, "\n").replace(/<\\br>/g, "\n").replace(/<br>/g, '\n').replace(/-/g, " ").trim().split('\n') // if 1ac has other text behind it in the elemnt - then its 1 thing, keep it. otherwise join all other elements until the next detection of a speech marker
                 console.log("ARG LIST: " + argList)
 
@@ -198,10 +198,12 @@ app.get('/roundreports', (req, resApp) => {
                     }
                 }
                 console.log("SORTED LIST: " + roundData['1nc'])
-
+                returnArr.push(roundData)
 
                 // break;
             }
+
+            resApp.send(returnArr)
 
         })
 })
