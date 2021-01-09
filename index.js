@@ -83,8 +83,71 @@ app.get('/getpage', (req, resApp) => {
 app.get('/cites', (req, resApp) => {
 
 })
-
 app.get('/roundreports', (req, resApp) => {
+    console.log(req.body)
+    superagent
+        .get(req.body.link)
+        .redirects(0)
+        .end((err, res) => {
+            var $ = cheerio.load(res.text)
+            var roundData = null
+            var returnArr = []
+            for (i = 1; i < $('#tblReports').children('tbody').children('tr').length; i++) {
+                roundData = {
+                    "tournament": "",
+                    "round": "",
+                    "oppoent": "",
+                    "judge": "",
+                    "1ac": [],
+                    "1nc": [],
+                    "2ac": [],
+                    "2nc": [],
+                    "1nr": [],
+                    "1ar": [],
+                    "2nr": [],
+                    "2ar": []
+                }
+                roundData.tournament = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[0]).text()
+                roundData.round = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[1]).text()
+                roundData.oppoent = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[0].trim()
+                roundData.judge = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[1].trim()
+                var argList = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('div').html().toLowerCase().replace(/<\/p>/g, "").replace(/<\\p>/g, "").replace(/<p>/g, "\n").replace(/<\/br>/g, "\n").replace(/<\\br>/g, "\n").replace(/<br>/g, '\n').replace(/-/g, " ").trim().split('\n') // if 1ac has other text behind it in the elemnt - then its 1 thing, keep it. otherwise join all other elements until the next detection of a speech marker
+
+                if (argList[0].includes('1ac') && argList[0].length <= 4) { // its args on every new line (https://hspolicy.debatecoaches.org/Chaminade/Ahuja-Hormozdiari%20Neg)
+                    var editStr = argList
+                    var tempArr = []
+                    var segment = "1ac"
+                    for (j = 1; j < editStr.length; j++) {
+
+                        if (editStr[j].trim() == '1nc' || editStr[j].trim() == '2ac' || editStr[j].trim() == '2nc' || editStr[j].trim() == '1nr' || editStr[j].trim() == '1ar' || editStr[j].trim() == '2nr' || editStr[j].trim() == '2ar') {
+                            // console.log(tempArr)
+                            roundData[segment] = tempArr // close last segment
+                            segment = editStr[j].trim()
+                            tempArr = []
+                        } else {
+                            tempArr.push(editStr[j].trim())
+                        }
+
+
+                    }
+                    roundData[segment] = tempArr
+                } else if (argList[0].includes('1ac') && argList[0].length > 4) {
+                    for (j = 0; j < argList.length; j++) {
+                        tempArr = argList[j].split(' ')
+                        roundData[tempArr[0]] = tempArr.slice(1).join(' ').trim()
+                    }
+                }
+                if (roundData['1ac'] == "" && roundData['1nc'] == "" && roundData['2ac'] == "" && roundData['2nc'] == "" && roundData['1nr'] == "" && roundData['1ar'] == "" && roundData['2nr'] == "" && roundData['2ar'] == "") {
+
+                } else {
+                    returnArr.push(roundData)
+                }   
+            }
+            resApp.send(returnArr)
+        })
+})
+
+app.get('/roundreportssort', (req, resApp) => {
     console.log(req.body)
     superagent
         .get(req.body.link)
