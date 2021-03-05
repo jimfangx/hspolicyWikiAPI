@@ -1,0 +1,3 @@
+service: hspolicyapi
+runtime: nodejs14
+env: standard

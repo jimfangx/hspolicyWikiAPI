@@ -16,7 +16,7 @@ app.use(cookieParser())
  * @todo get all cites,  get all round reports
  */
 
-app.get('/getpage', (req, resApp) => {
+app.post('/getpage', (req, resApp) => {
 
     var schoolSearchString = req.body.school
     schoolSearchString = schoolSearchString.replace('High School', "").trim()
@@ -80,10 +80,10 @@ app.get('/getpage', (req, resApp) => {
 })
 
 
-app.get('/cites', (req, resApp) => {
+app.post('/cites', (req, resApp) => {
 
 })
-app.get('/roundreports', (req, resApp) => {
+app.post('/roundreports', (req, resApp) => {
     console.log(req.body)
     superagent
         .get(req.body.link)
@@ -147,7 +147,7 @@ app.get('/roundreports', (req, resApp) => {
         })
 })
 
-app.get('/roundreportssort', (req, resApp) => {
+app.post('/roundreportssort', (req, resApp) => {
     console.log(req.body)
     superagent
         .get(req.body.link)
@@ -271,7 +271,7 @@ app.get('/roundreportssort', (req, resApp) => {
         })
 })
 
-app.get('/test', (req, resApp) => {
+app.post('/test', (req, resApp) => {
     x = req.body.lol.toLowerCase().replace(/\([^)]*\)/g, "").split('\n')
     for (i = 0; i < x.length; i++) {
         x[i] = x[i].trim()

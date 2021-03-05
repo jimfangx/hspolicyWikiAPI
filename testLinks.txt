@@ -6,3 +6,6 @@ https://hspolicy.debatecoaches.org/Archbishop%20Mitty/Aggarwal-Patwa%20Neg
 
 arg on same lines, greehhill2 arg identifyer behind arg
 https://hspolicy.debatecoaches.org/Archbishop%20Mitty/Aggarwal-Patwa%20Aff
+
+
+NOTE: GCLOUD Service structure: https://stackoverflow.com/questions/29302717/is-there-possibility-to-host-multiple-applications-with-google-app-engine
