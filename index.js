@@ -83,6 +83,7 @@ app.post('/getpage', (req, resApp) => {
 app.post('/cites', (req, resApp) => {
 
 })
+
 app.post('/roundreports', (req, resApp) => {
     console.log(req.body)
     superagent
@@ -141,11 +142,42 @@ app.post('/roundreports', (req, resApp) => {
 
                 } else {
                     returnArr.push(roundData)
-                }   
+                }
             }
             resApp.send(returnArr)
         })
 })
+
+
+app.post('/latestEntry', (req, resApp) => {
+    console.log(req.body.link)
+
+    // var reqLink = req.body.link.replace('https://hspolicy.debatecoaches.org/', "").split('/')
+    // reqLink = `https://hspolicy.debatecoaches.org/rest/wikis/hspolicy20/spaces/${reqLink[0]}/pages/${reqLink[1]}/objects` // this has to change every year :( cause of the hspolicy20 thing
+
+    var reqLink = `https://hspolicy.debatecoaches.org/rest/wikis/hspolicy20/spaces/College%20Prep/pages/Gu-Huang%20Aff/objects`
+    console.log(reqLink)
+    superagent
+        .get(reqLink)
+        // .redirects(0)
+        .end((err, res) => {
+            console.log(Buffer.from(res.body).toString())
+            $ = cheerio.load(Buffer.from(res.body).toString(), {
+                xmlMode: true,
+                xml: true
+            });
+
+            // console.log($('\\objects').children().length)
+            for (i = 0; i < $('\\objects').children().length; i++) {
+                
+            }
+        })
+
+
+})
+
+
+
 
 app.post('/roundreportssort', (req, resApp) => {
     console.log(req.body)
