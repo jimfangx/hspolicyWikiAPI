@@ -246,6 +246,7 @@ app.post('/latestEntry', async (req, resApp) => {
                             for (j = 0; j < entryList.length; j++) {
                                 if ((entryList[i].number === entryList[j].number) && (i != j)) { // match - we have a duplicate, one has a cite, the other one does not
                                     if (entryList[i].propertyLink.includes('CitesClass')) { // i has more info (delete j)
+                                        // if round report contains "contact info" - skip & put j's round report stuff in i
                                         entryList.splice(j, 1)
                                     } else if (entryList[j].propertyLink.includes('CitesClass')) { // j has more info (delete i)
                                         entryList.splice(i, 1)
