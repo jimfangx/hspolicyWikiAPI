@@ -86,7 +86,6 @@ app.post('/cites', (req, resApp) => {
 })
 
 app.post('/roundreports', (req, resApp) => {
-    console.log(req.body)
     superagent
         .get(req.body.link)
         .redirects(0)
@@ -98,7 +97,7 @@ app.post('/roundreports', (req, resApp) => {
                 roundData = {
                     "tournament": "",
                     "round": "",
-                    "oppoent": "",
+                    "opponent": "",
                     "judge": "",
                     "1ac": [],
                     "1nc": [],
@@ -111,8 +110,8 @@ app.post('/roundreports', (req, resApp) => {
                 }
                 roundData.tournament = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[0]).text()
                 roundData.round = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[1]).text()
-                roundData.oppoent = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[0].trim()
-                roundData.judge = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[1].trim()
+                roundData.opponent = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[0].trim().replace('Opponent: ', "")
+                roundData.judge = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('p').text().split('|')[1].trim().replace('Judge: ', "")
                 var argList = $($($('#tblReports').children('tbody').children('tr')[i]).children('td')[2]).children('div').children('div').html().toLowerCase().replace(/<\/p>/g, "").replace(/<\\p>/g, "").replace(/<p>/g, "\n").replace(/<\/br>/g, "\n").replace(/<\\br>/g, "\n").replace(/<br>/g, '\n').replace(/-/g, " ").trim().split('\n') // if 1ac has other text behind it in the elemnt - then its 1 thing, keep it. otherwise join all other elements until the next detection of a speech marker
 
                 if (argList[0].includes('1ac') && argList[0].length <= 4) { // its args on every new line (https://hspolicy.debatecoaches.org/Chaminade/Ahuja-Hormozdiari%20Neg)
