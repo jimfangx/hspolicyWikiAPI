@@ -37,40 +37,47 @@ app.post('/getpage', (req, resApp) => {
             .end((err, res) => {
 
                 if (res.text.includes('Were you looking for one of the following pages instead')) { // wrong name - click on the first link with hspolicy header
+                    console.log('looking for page instead')
                     var $ = cheerio.load(res.text)
                     var correctSchoolLink = ""
                     for (i = 0; i < $('.centered.panel', '#mainContentArea').children('.panel-body').children('div').children('ul').children('li').length; i++) {
                         if (!$($('.centered.panel', '#mainContentArea').children('.panel-body').children('div').children('ul').children('li')[i]).children('a')[0].attribs.href.includes('.com')) {
                             correctSchoolLink = "https://hspolicy.debatecoaches.org" + $($('.centered.panel', '#mainContentArea').children('.panel-body').children('div').children('ul').children('li')[i]).children('a')[0].attribs.href
+                            break;
                         }
                     }
+                    superagent
+                        .get(correctSchoolLink)
+                        .redirects(0)
+                        .end((err, resStudent) => {
+                            findTeamPage(resApp, resStudent)
+                        })
                 } else {
-                    correctSchoolLink = `https://hspolicy.debatecoaches.org/${encodeURIComponent(schoolSearchString)}/`
+                    console.log('correct url')
+                    findTeamPage(resApp, res)
                 }
 
-                superagent
-                    .get(correctSchoolLink)
-                    .redirects(0)
-                    .end((err, resStudent) => {
-                        var $ = cheerio.load(resStudent.text)
-                        if ($('#tblTeams').children('tbody').children('tr').length > 1) { // if there are teams on the teams page of a school
+                function findTeamPage(resApp, resStudent) {
+                    var $ = cheerio.load(resStudent.text)
+                    if ($('#tblTeams').children('tbody').children('tr').length > 1) { // if there are teams on the teams page of a school
 
-                            for (i = 1; i < $('#tblTeams').children('tbody').children('tr').length; i++) { // start from 1 due to sortHeader
-                                var website = $($($('#tblTeams').children('tbody').children('tr')[i]).children('td')[1]).children('span').children('a').text().replace('Aff', "").trim()
-                                var altSearchStr = (competitorSearchString.substring(competitorSearchString.indexOf('-') + 1) + "-" + competitorSearchString.substring(0, competitorSearchString.indexOf('-')))
+                        for (i = 1; i < $('#tblTeams').children('tbody').children('tr').length; i++) { // start from 1 due to sortHeader
+                            var website = $($($('#tblTeams').children('tbody').children('tr')[i]).children('td')[1]).children('span').children('a').text().replace('Aff', "").trim()
+                            var altSearchStr = (competitorSearchString.substring(competitorSearchString.indexOf('-') + 1) + "-" + competitorSearchString.substring(0, competitorSearchString.indexOf('-')))
 
-                                if (website === competitorSearchString) { //td[0] looks at the aff page column // Find the team on the team page on the wiki
-                                    resApp.send("https://hspolicy.debatecoaches.org" + $($($('#tblTeams').children('tbody').children('tr')[i]).children('td')[1]).children('span').children('a')[0].attribs.href)
-                                    return;
-                                } else if (website === altSearchStr) {
-                                    resApp.send("https://hspolicy.debatecoaches.org" + $($($('#tblTeams').children('tbody').children('tr')[i]).children('td')[1]).children('span').children('a')[0].attribs.href)
-                                    return;
-                                }
+                            if (website === competitorSearchString) { //td[0] looks at the aff page column // Find the team on the team page on the wiki
+                                resApp.send("https://hspolicy.debatecoaches.org" + $($($('#tblTeams').children('tbody').children('tr')[i]).children('td')[1]).children('span').children('a')[0].attribs.href)
+                                return;
+                            } else if (website === altSearchStr) {
+                                resApp.send("https://hspolicy.debatecoaches.org" + $($($('#tblTeams').children('tbody').children('tr')[i]).children('td')[1]).children('span').children('a')[0].attribs.href)
+                                return;
                             }
-                            resApp.status(404)
-                            resApp.send(`Wiki not found. Possible difference between tabroom entry and wiki entry.`)
                         }
-                    })
+                        resApp.status(404)
+                        resApp.send(`Wiki not found. Possible difference between tabroom entry and wiki entry.`)
+                    }
+                }
+
                 // check either aff column or neg column against the competitor entry names - if match, copy a tag href - if no matches at the end of the first run, switch the compeitor names and check again. if empty after both runs - return no wiki (1 person in the partership has a wiki support coming later)
             })
     } catch (err) {
